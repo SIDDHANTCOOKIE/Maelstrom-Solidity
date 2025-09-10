@@ -46,7 +46,7 @@ contract Maelstrom {
         updateTimeStamp(token);
     }
 
-    function _preSell(address token, uint256 amount) internal returns (uint256) {
+    function _postSell(address token, uint256 amount) internal returns (uint256) {
         uint256 sellPrice = priceSell(token);
         uint256 ethAmount = amount * sellPrice;
         require((ethBalance[token] * 10) / 100 >= ethAmount, "Not more than 10% of eth in pool can be used for swap");
@@ -117,7 +117,7 @@ contract Maelstrom {
     function sell(address token, uint256 amount) public {
         // Transfer `amount * priceSell(token)` ETH from this contract to msg.sender
         receiveERC20(token, msg.sender, amount);
-        (bool success, ) = msg.sender.call{value: _preSell(token,amount)}(''); 
+        (bool success, ) = msg.sender.call{value: _postSell(token,amount)}(''); 
         require(success, 'Transfer failed');
     }
 
@@ -145,7 +145,7 @@ contract Maelstrom {
 
     function swap(address tokenSell, address tokenBuy, uint256 amountToSell, uint256 minimumAmountToBuy) external {
         // sell tokenSell and then buy TokenBuy with the ETH from the tokenSell you just sold
-        uint256 ethAmount = _preSell(tokenSell, amountToSell);
+        uint256 ethAmount = _postSell(tokenSell, amountToSell);
         uint256 tokenAmount = _preBuy(tokenBuy, ethAmount);
         require(tokenAmount >= minimumAmountToBuy, "Insufficient output amount");
         receiveERC20(tokenSell, msg.sender, amountToSell);
