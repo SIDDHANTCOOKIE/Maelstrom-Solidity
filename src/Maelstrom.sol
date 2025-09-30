@@ -23,6 +23,9 @@ contract Maelstrom {
         uint256 decayedSellVolume;
     }
     uint256 multiplicationFactor = 5;
+    address[] public poolList;
+    mapping(address => mapping(address => uint256)) public userPoolIndex;  //index+1 is stored
+    mapping(address => address[]) public userPools;
     mapping(address => LiquidityPoolToken) public poolToken; 
     mapping(address => uint256) public ethBalance;
     mapping(address => PoolParams) public pools;
@@ -133,6 +136,7 @@ contract Maelstrom {
         });
         ethBalance[token] = msg.value;
         poolToken[token].mint(msg.sender, amount);
+        poolList.push(token);
     }
 
     function reserves(address token) public view returns (uint256, uint256) {
@@ -163,6 +167,11 @@ contract Maelstrom {
     }
 
     function deposit(address token) external payable {
+        require(msg.value > 0, "Must send ETH to deposit");
+        if(userPoolIndex[msg.sender][token] == 0) {
+            userPools[msg.sender].push(token);
+            userPoolIndex[msg.sender][token] = userPools[msg.sender].length; 
+        }
         uint256 ethBalanceBefore = ethBalance[token];
         ethBalance[token] += msg.value;
         receiveERC20(token, msg.sender, msg.value * tokenPerETHRatio(token));
@@ -171,6 +180,7 @@ contract Maelstrom {
     }
 
     function withdraw(address token, uint256 amount) external {
+        require(amount > 0, "Amount must be greater than zero");
         LiquidityPoolToken pt = poolToken[token];
         require(pt.balanceOf(msg.sender) >= amount, "Not enough LP tokens");
         pt.burn(msg.sender, amount);
@@ -180,6 +190,19 @@ contract Maelstrom {
         uint256 ethAmount = (rETH * amount) / ts;
         ethBalance[token] -= ethAmount;
         (bool success, ) = msg.sender.call{value: (ethAmount)}('');
+        if(pt.balanceOf(msg.sender) == 0){
+            address[] storage currentPools = userPools[msg.sender];
+            mapping(address => uint256) storage userPoolIdx = userPoolIndex[msg.sender];
+            uint256 index = userPoolIndex[msg.sender][token] - 1;
+            userPoolIdx[token] = 0;
+            uint256 lastIndex = userPools[msg.sender].length - 1;
+            if(index != 0){
+                address lastToken = currentPools[lastIndex];
+                currentPools[index] = lastToken;
+                userPoolIdx[lastToken] = index + 1; 
+            }
+            currentPools.pop();
+        }
         require(success, "ETH Transfer Failed!");
     }
 
@@ -190,4 +213,22 @@ contract Maelstrom {
         receiveERC20(tokenSell, msg.sender, amountToSell);
         sendERC20(tokenBuy, msg.sender, tokenAmount);
     }
+
+    function _getSubArray(address[] memory array, uint256 start, uint256 end) internal pure returns (address[] memory) {
+        require(start <= end && end < array.length, "Invalid start or end index");
+        address[] memory subArray = new address[](end - start + 1);
+        for (uint256 i = start; i <= end; i++) {
+            subArray[i - start] = array[i];
+        }
+        return subArray;
+    }
+
+    function getPoolList(uint256 start, uint256 end) external view returns (address[] memory) {
+        return _getSubArray(poolList, start, end);
+    }
+
+    function getUserPools(address user, uint256 start, uint256 end) external view returns (address[] memory) {
+        return _getSubArray(userPools[user], start, end);
+    }
+
 }
