@@ -95,6 +95,7 @@ contract Maelstrom {
         uint256 newInitialSellPrice = (pool.initialSellPrice * (100 - auctionResetPercentage)) / 100;
         pool.lastSellPrice = newPrice;
         pool.initialSellPrice = newInitialSellPrice; 
+        pool.initialBuyPrice = priceBuy(token);
         pool.decayedSellVolume = newDecayedSellVolume;
         pool.decayedBuyVolume = decayedBuyVolume;
         pool.finalBuyPrice = calculateFinalPrice(newDecayedSellVolume, newInitialSellPrice, decayedBuyVolume, pool.initialBuyPrice);
@@ -113,6 +114,7 @@ contract Maelstrom {
         uint256 newInitialBuyPrice = (pool.initialBuyPrice * (100 + auctionResetPercentage)) / 100;
         pool.lastBuyPrice = newPrice;
         pool.initialBuyPrice = newInitialBuyPrice;
+        pool.initialSellPrice = priceSell(token);
         pool.decayedBuyVolume = newDecayedBuyVolume;
         pool.decayedSellVolume = decayedSellVolume;
         pool.finalBuyPrice = calculateFinalPrice(decayedSellVolume, pool.initialSellPrice, newDecayedBuyVolume, newInitialBuyPrice);
