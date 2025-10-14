@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prb/math": "^4.1.0",
     "openzeppelin": "^1.0.0"
   }
 }
