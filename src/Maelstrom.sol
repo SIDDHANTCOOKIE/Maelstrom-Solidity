@@ -37,7 +37,6 @@ contract Maelstrom {
     event Deposit(address indexed token, address indexed user, uint256 ethAmount, uint256 tokenAmount, uint256 lpTokensMinted);
     event Withdraw(address indexed token, address indexed user, uint256 ethAmount, uint256 tokenAmount, uint256 lpTokensBurned);
     uint256 auctionResetPercentage = 5;
-    uint256 stableOrderFeePercentage = 10; 
     uint256 totalFees = 0;
     address[] public poolList;
     mapping(address => uint256) public totalPoolFees;
@@ -81,7 +80,14 @@ contract Maelstrom {
     }
 
     function getPoolFeeList(address token, uint256 start, uint256 end) external view returns (PoolFees[] memory) {
-        return _getSubArray(poolFeesEvents[token], start, end);
+        require(start <= end, "Invalid start or end index");
+        PoolFees[] memory array = poolFeesEvents[token];
+        end = end >= array.length ? array.length - 1 : end;
+        PoolFees[] memory subArray = new PoolFees[](end - start + 1);
+        for (uint256 i = start; i <= end; i++) {
+            subArray[i - start] = array[i];
+        }
+        return subArray;
     }
 
     function _addTokenToUserPools(address user, address token) internal {
@@ -151,12 +157,12 @@ contract Maelstrom {
         require((ethBalance[token] * 10) / 100 >= ethAmount, "Not more than 10% of eth in pool can be used for swap");
         ethBalance[token] -= ethAmount;
         uint256 totalFee = ((pools[token].finalSellPrice - sellPrice) * amount) / 1e18;
-        totalFees += fee;
-        totalPoolFees[token] += fee;
-        PoolFees memory newFee = PoolFees({fee: fee, timestamp: block.timestamp});
+        totalFees += totalFee;
+        totalPoolFees[token] += totalFee;
+        PoolFees memory newFee = PoolFees({fee: totalFee, timestamp: block.timestamp});
         poolFeesEvents[token].push(newFee);
         updatePriceSellParams(token, amount, sellPrice);
-        uint256 stableFees = totalFee * protocolParameter.Fee() / 10000;
+        uint256 stableFees = totalFee * protocolParameters.fee() / 10000;
         address feeRecipient = protocolParameters.treasury();
         (bool success, ) = feeRecipient.call{value: stableFees}(''); 
         require(success, 'Transfer failed');
@@ -169,12 +175,12 @@ contract Maelstrom {
         uint256 tokenAmount = (ethAmount * 1e18 ) / buyPrice;
         require((ERC20(token).balanceOf(address(this)) * 10) / 100 >= tokenAmount, "Not more than 10% of tokens in pool can be used for swap");
         uint256 totalFee = ((buyPrice - pools[token].finalBuyPrice) * tokenAmount) / 1e18;
-        totalFees += fee;
-        totalPoolFees[token] += fee;
-        PoolFees memory newFee = PoolFees({fee: fee, timestamp: block.timestamp});
+        totalFees += totalFee;
+        totalPoolFees[token] += totalFee;
+        PoolFees memory newFee = PoolFees({fee: totalFee, timestamp: block.timestamp});
         poolFeesEvents[token].push(newFee);
         updatePriceBuyParams(token, tokenAmount, buyPrice);
-        uint256 stableFees = totalFee * protocolParameter.Fee() / 10000;
+        uint256 stableFees = totalFee * protocolParameters.fee() / 10000;
         address feeRecipient = protocolParameters.treasury();
         (bool success, ) = feeRecipient.call{value: stableFees}(''); 
         require(success, 'Transfer failed');
