@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import {Test, console} from "forge-std/Test.sol";
 import {Maelstrom} from "../src/Maelstrom.sol";
 import {LiquidityPoolToken} from "../src/LiquidityPoolToken.sol";
-import {MockERC20} from "./MockERC20.sol";
+import {MockERC20} from "../src/MockERC20.sol";
 
 contract MaelstromTest is Test {
     Maelstrom public maelstrom;
@@ -28,7 +28,7 @@ contract MaelstromTest is Test {
     event Withdraw(address indexed token, address indexed user, uint256 ethAmount, uint256 tokenAmount, uint256 lpTokensBurned);
 
     function setUp() public {
-        maelstrom = new Maelstrom();
+        maelstrom = new Maelstrom(makeAddr("protocolParametersAddress"));
         tokenA = new MockERC20("Token A", "TKNA");
         tokenB = new MockERC20("Token B", "TKNB");
         // Give test accounts ETH
