@@ -102,12 +102,6 @@ contract Maelstrom {
         _;
     }
 
-    modifier hasLiquidity(address token) {
-        (uint256 ethBal,) = reserves(token);
-        require(ethBal > 0, "Pool has no ETH liquidity");
-        _;
-    }
-
     constructor(address _protocolParametersAddress) {
         require(_protocolParametersAddress != address(0));
         protocolParameters = ProtocolParameters(_protocolParametersAddress);
