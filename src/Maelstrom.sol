@@ -208,6 +208,8 @@ contract Maelstrom {
 
     function initializePool(address token, uint256 amountToken, uint256 initialPriceBuy, uint256 initialPriceSell) public payable {
         require(msg.value > 0, "Initial liquidity required");
+        require(amountToken > 0, "Initial token liquidity required");
+        require(initialPriceBuy > 0 && initialPriceSell > 0, "Initial prices must be > 0");
         require(address(poolToken[token]) == address(0), "pool already initialized");
         string memory tokenName = string.concat(ERC20(token).name(), " Maelstrom Liquidity Pool Token");
         string memory tokenSymbol = string.concat("m", ERC20(token).symbol());
