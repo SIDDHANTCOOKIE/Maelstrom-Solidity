@@ -11,44 +11,27 @@ contract MaelstromTest is Test {
     Maelstrom public maelstrom;
     MockERC20 public tokenA;
     MockERC20 public tokenB;
-
+    
     address public alice = makeAddr("alice");
     address public bob = makeAddr("bob");
     address public charlie = makeAddr("charlie");
-
+    
     uint256 public constant INITIAL_ETH_BALANCE = 1000 ether;
-    uint256 public constant INITIAL_TOKEN_AMOUNT = 1000 * 10 ** 18;
-    uint256 public constant INITIAL_BUY_PRICE = 2 * 10 ** 18; // 2 ETH per token
-    uint256 public constant INITIAL_SELL_PRICE = 1.8 * 10 ** 18; // 1.8 ETH per token
-
-    event PoolInitialized(
-        address indexed token, uint256 tokenAmount, uint256 ethAmount, uint256 initialPriceBuy, uint256 initialPriceSell
-    );
-    event BuyTrade(
-        address indexed token, address indexed trader, uint256 ethAmount, uint256 tokenAmount, uint256 buyPrice
-    );
-    event SellTrade(
-        address indexed token, address indexed trader, uint256 tokenAmount, uint256 ethAmount, uint256 sellPrice
-    );
-    event SwapTrade(
-        address indexed tokenSold,
-        address indexed tokenBought,
-        address indexed trader,
-        uint256 tokenAmountSold,
-        uint256 tokenAmountBought,
-        uint256 sellPrice,
-        uint256 buyPrice
-    );
-    event Deposit(
-        address indexed token, address indexed user, uint256 ethAmount, uint256 tokenAmount, uint256 lpTokensMinted
-    );
-    event Withdraw(
-        address indexed token, address indexed user, uint256 ethAmount, uint256 tokenAmount, uint256 lpTokensBurned
-    );
+    uint256 public constant INITIAL_TOKEN_AMOUNT = 1000 * 10**18;
+    uint256 public constant INITIAL_BUY_PRICE = 2 * 10**18; // 2 ETH per token
+    uint256 public constant INITIAL_SELL_PRICE = 1.8 * 10**18; // 1.8 ETH per token
+    
+    event PoolInitialized(address indexed token, uint256 tokenAmount, uint256 ethAmount, uint256 initialPriceBuy, uint256 initialPriceSell);
+    event BuyTrade(address indexed token, address indexed trader, uint256 ethAmount, uint256 tokenAmount, uint256 buyPrice);
+    event SellTrade(address indexed token, address indexed trader, uint256 tokenAmount, uint256 ethAmount, uint256 sellPrice);
+    event SwapTrade(address indexed tokenSold, address indexed tokenBought, address indexed trader, uint256 tokenAmountSold, uint256 tokenAmountBought, uint256 sellPrice, uint256 buyPrice);
+    event Deposit(address indexed token, address indexed user, uint256 ethAmount, uint256 tokenAmount, uint256 lpTokensMinted);
+    event Withdraw(address indexed token, address indexed user, uint256 ethAmount, uint256 tokenAmount, uint256 lpTokensBurned);
 
     function setUp() public {
+
         address treasury = makeAddr("treasury");
-        address manager = makeAddr("manager");
+        address manager  = makeAddr("manager");
 
         ProtocolParameters protocol = new ProtocolParameters(
             treasury,
@@ -77,7 +60,10 @@ contract MaelstromTest is Test {
         vm.expectEmit(true, true, true, true);
         emit PoolInitialized(address(tokenA), INITIAL_TOKEN_AMOUNT, 10 ether, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Check pool was initialized correctly
@@ -100,11 +86,17 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT * 2);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.expectRevert("pool already initialized");
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
     }
@@ -114,7 +106,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Bob buys tokens
@@ -125,7 +120,7 @@ contract MaelstromTest is Test {
         uint256 bobTokensBefore = tokenA.balanceOf(bob);
         // vm.expectEmit(true, true, true, true);
         // emit BuyTrade(address(tokenA), address(bob), ethAmount, expectedTokenAmount, avgPrice);
-        maelstrom.buy{value: ethAmount}(address(tokenA), expectedTokenAmount);
+        maelstrom.buy{value: ethAmount}(address(tokenA),expectedTokenAmount);
         uint256 bobTokensAfter = tokenA.balanceOf(bob);
         console.log("Bob's tokens after:", bobTokensAfter);
         console.log("Actual tokens received:", bobTokensAfter - bobTokensBefore);
@@ -142,12 +137,15 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 20 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Bob sells tokens
         uint256 avgPrice = (INITIAL_BUY_PRICE + INITIAL_SELL_PRICE) / 2;
-        uint256 tokenAmount = 1 * 10 ** 18;
+        uint256 tokenAmount = 1 * 10**18;
         uint256 expectedEthAmount = (tokenAmount * avgPrice) / 1e18;
         uint256 minEthOut = (expectedEthAmount * 99) / 100; // 1% slippage
         vm.startPrank(bob);
@@ -170,17 +168,20 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Make a trade to set up price decay
-        vm.warp(block.timestamp + 3600);
+        vm.warp(block.timestamp + 3600); 
         vm.startPrank(bob);
         uint256 buyPrice = maelstrom.priceBuy(address(tokenA));
         uint256 quotedTokens = (1 ether * 1e18) / buyPrice;
         uint256 minTokensOut = (quotedTokens * 99) / 100;
         maelstrom.buy{value: 1 ether}(address(tokenA), minTokensOut);
-        tokenA.approve(address(maelstrom), 1 * 10 ** 18);
+        tokenA.approve(address(maelstrom), 1 * 10**18);
 
         uint256 sellAmount = 1e17;
         tokenA.approve(address(maelstrom), sellAmount);
@@ -188,12 +189,12 @@ contract MaelstromTest is Test {
         uint256 price = maelstrom.priceSell(address(tokenA));
         uint256 quoted = (sellAmount * price) / 1e18;
         uint256 minOut = (quoted * 99) / 100;
-
+        
         maelstrom.sell(address(tokenA), sellAmount, minOut);
         vm.stopPrank();
         uint256 priceAfterTrade = maelstrom.priceBuy(address(tokenA));
         // Skip forward in time
-        vm.warp(block.timestamp + 1000);
+        vm.warp(block.timestamp + 1000); 
         uint256 priceAfterTime = maelstrom.priceBuy(address(tokenA));
         // Price should have changed due to time decay
         assertTrue(priceAfterTime != priceAfterTrade);
@@ -204,7 +205,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Bob deposits liquidity
@@ -230,7 +234,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         vm.startPrank(bob);
@@ -256,7 +263,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         vm.startPrank(bob);
@@ -280,14 +290,20 @@ contract MaelstromTest is Test {
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         tokenB.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 100 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         maelstrom.initializePool{value: 100 ether}(
-            address(tokenB), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenB),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Bob swaps tokenA for tokenB
-        uint256 tokenAAmount = 1 * 10 ** 17;
+        uint256 tokenAAmount = 1 * 10**17;
         uint256 avgPrice = (INITIAL_SELL_PRICE + INITIAL_BUY_PRICE) / 2;
         uint256 expectedEthFromSell = (tokenAAmount * avgPrice) / 1e18;
         uint256 expectedTokenBAmount = (expectedEthFromSell * 1e18) / avgPrice;
@@ -308,15 +324,21 @@ contract MaelstromTest is Test {
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         tokenB.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 100 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         maelstrom.initializePool{value: 100 ether}(
-            address(tokenB), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenB),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Bob tries to swap with too high minimum amount
-        uint256 tokenAAmount = 1 * 10 ** 17;
-        uint256 tooHighMinimum = 1000 * 10 ** 18; // Unrealistically high
+        uint256 tokenAAmount = 1 * 10**17;
+        uint256 tooHighMinimum = 1000 * 10**18; // Unrealistically high
         vm.startPrank(bob);
         tokenA.approve(address(maelstrom), tokenAAmount);
         vm.expectRevert("Insufficient output amount");
@@ -326,25 +348,28 @@ contract MaelstromTest is Test {
 
     function testTradeVolumeConstraints() public {
         // Initialize pool with small amounts
-        uint256 smallTokenAmount = 10 * 10 ** 18;
+        uint256 smallTokenAmount = 10 * 10**18;
         uint256 smallEthAmount = 1 ether;
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), smallTokenAmount);
         maelstrom.initializePool{value: smallEthAmount}(
-            address(tokenA), smallTokenAmount, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            smallTokenAmount,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Try to buy more than 10% of tokens in pool
         uint256 largeEthAmount = 10 ether; // This would try to buy more than available
         vm.prank(bob);
         vm.expectRevert("Not more than 10% of tokens in pool can be used for swap");
-        maelstrom.buy{value: largeEthAmount}(address(tokenA), 10 * 10 ** 18);
+        maelstrom.buy{value: largeEthAmount}(address(tokenA),10 * 10**18);
         // Try to sell more than 10% of ETH in pool
-        uint256 largeTokenAmount = 10 * 10 ** 18; // This would try to drain more than 10% of ETH
+        uint256 largeTokenAmount = 10 * 10**18; // This would try to drain more than 10% of ETH
         vm.startPrank(bob);
         tokenA.approve(address(maelstrom), largeTokenAmount);
         vm.expectRevert("Not more than 10% of eth in pool can be used for swap");
-        maelstrom.sell(address(tokenA), largeTokenAmount, 1 ether);
+        maelstrom.sell(address(tokenA), largeTokenAmount,1 ether);
         vm.stopPrank();
     }
 
@@ -354,10 +379,16 @@ contract MaelstromTest is Test {
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         tokenB.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenB), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenB),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Check total pools
@@ -378,7 +409,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Check alice's pool balances
@@ -402,7 +436,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Try to deposit without sending ETH
@@ -416,7 +453,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         vm.prank(bob);
@@ -429,12 +469,15 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         vm.prank(bob);
         vm.expectRevert("Not enough LP tokens");
-        maelstrom.withdraw(address(tokenA), 1000 * 10 ** 18);
+        maelstrom.withdraw(address(tokenA), 1000 * 10**18);
     }
 
     function testFuzzBuyTrade(uint256 ethAmount) public {
@@ -444,7 +487,10 @@ contract MaelstromTest is Test {
         vm.startPrank(alice);
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{value: 10 ether}(
-            address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE
+            address(tokenA),
+            INITIAL_TOKEN_AMOUNT,
+            INITIAL_BUY_PRICE,
+            INITIAL_SELL_PRICE
         );
         vm.stopPrank();
         // Ensure bob has enough ETH
@@ -453,7 +499,7 @@ contract MaelstromTest is Test {
         uint256 expectedTokenAmount = (ethAmount * 1e18) / buyPrice;
         vm.startPrank(bob);
         uint256 bobTokensBefore = tokenA.balanceOf(bob);
-        maelstrom.buy{value: ethAmount}(address(tokenA), expectedTokenAmount);
+        maelstrom.buy{value: ethAmount}(address(tokenA),expectedTokenAmount);
         uint256 bobTokensAfter = tokenA.balanceOf(bob);
         assertEq(bobTokensAfter - bobTokensBefore, expectedTokenAmount);
         vm.stopPrank();

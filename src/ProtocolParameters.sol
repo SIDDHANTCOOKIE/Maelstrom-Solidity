@@ -10,12 +10,12 @@ contract ProtocolParameters {
     address public manager;
     uint256 public fee;
 
-    modifier onlyManager() {
+    modifier onlyManager(){
         require(msg.sender == manager, "Caller is not the manager");
         _;
     }
 
-    modifier lessThan5Percent(uint256 feeRate) {
+    modifier lessThan5Percent(uint256 feeRate){
         require(feeRate <= 500, "Fee rate must be between 0 and 500"); //0 to 5% , rate = 0.0001 * _fee;
         _;
     }
@@ -25,11 +25,7 @@ contract ProtocolParameters {
         _;
     }
 
-    constructor(address _treasury, address _manager, uint256 _fee)
-        nonZeroAddress(_treasury)
-        nonZeroAddress(_manager)
-        lessThan5Percent(_fee)
-    {
+    constructor(address _treasury,address _manager, uint256 _fee) nonZeroAddress(_treasury) nonZeroAddress(_manager) lessThan5Percent(_fee) {
         treasury = _treasury;
         manager = _manager;
         fee = _fee;
