@@ -8,6 +8,7 @@
     "test": "test"
   },
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "sol-fmt": "prettier --write --plugin=prettier-plugin-solidity",
     "sol-fmt-all": "prettier --write \"**/*.sol\" --plugin=prettier-plugin-solidity",
 
