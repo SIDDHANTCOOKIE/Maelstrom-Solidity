@@ -175,7 +175,6 @@ contract Maelstrom {
         if (totalFee != 0) processProtocolFees(token, totalFee);
         
         updatePriceSellParams(token, amountToken, sellPrice);
-        // Fixed: Second call to processProtocolFees removed to prevent double charging
         return (amountEther, sellPrice);
     }
 
