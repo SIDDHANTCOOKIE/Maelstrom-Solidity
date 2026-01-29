@@ -77,7 +77,6 @@ contract Maelstrom {
         if (array.length == 0 || start >= array.length) {
             return new address[](0);
         }
-
         end = end >= array.length ? array.length - 1 : end;
         require(start <= end, "Invalid start or end index");
         address[] memory subArray = new address[](end - start + 1);
@@ -198,7 +197,6 @@ contract Maelstrom {
         ethBalance[token] += amountEther;
         uint256 buyPrice = priceBuy(token);
         uint256 amountToken = (amountEther * 1e18) / buyPrice;
-
         require((ERC20(token).balanceOf(address(this)) * 10) / 100 >= amountToken, "Not more than 10% of tokens in pool can be used for swap");
         uint256 totalFee = ((buyPrice - pools[token].finalBuyPrice) * amountToken) / 1e18;
         if (totalFee != 0) processProtocolFees(token, totalFee);
@@ -234,7 +232,6 @@ contract Maelstrom {
         LiquidityPoolToken lpt = new LiquidityPoolToken(tokenName, tokenSymbol);
         poolToken[token] = lpt;
         uint256 avgPrice = (initialPriceBuy + initialPriceSell) / 2;
-
         pools[token] = PoolParams({ lastBuyPrice: initialPriceBuy, lastSellPrice: initialPriceSell, lastExchangeTimestamp: block.timestamp, finalBuyPrice: avgPrice, finalSellPrice: avgPrice, initialSellPrice: initialPriceSell, initialBuyPrice: initialPriceBuy, lastBuyTimestamp: block.timestamp, lastSellTimestamp: block.timestamp, decayedBuyTime: 0, decayedSellTime: 0, decayedBuyVolume: 0, decayedSellVolume: 0 });
         ethBalance[token] = msg.value;
         poolToken[token].mint(msg.sender, amountToken);
@@ -271,7 +268,6 @@ contract Maelstrom {
         receiveERC20(token, msg.sender, amount);
         (uint256 amountEther, uint256 sellPrice) = _postSell(token, amount);
         require(minimumAmountEther < amountEther, "Insufficient output amount");
-
         (bool success, ) = msg.sender.call{ value: amountEther }("");
         require(success, "Transfer failed");
         emit SellTrade(token, msg.sender, amount, amountEther, sellPrice, priceSell(token), priceBuy(token));
