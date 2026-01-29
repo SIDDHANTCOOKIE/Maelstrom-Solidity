@@ -80,7 +80,6 @@ contract Maelstrom {
 
         end = end >= array.length ? array.length - 1 : end;
         require(start <= end, "Invalid start or end index");
-
         address[] memory subArray = new address[](end - start + 1);
         for (uint256 i = start; i <= end; i++) {
             subArray[i - start] = array[i];
@@ -141,7 +140,6 @@ contract Maelstrom {
         poolFeesEvents[token].push(newFee);
         uint256 stableFees = (totalFee * protocolParameters.fee()) / 10000;
         address feeRecipient = protocolParameters.treasury();
-
         (bool success, ) = feeRecipient.call{ value: stableFees }("");
         require(success, "Transfer failed");
     }
@@ -178,7 +176,6 @@ contract Maelstrom {
         pool.initialSellPrice = priceSell(token);
         pool.decayedBuyVolume = newDecayedBuyVolume;
         pool.decayedSellVolume = decayedSellVolume;
-
         pool.finalBuyPrice = calculateFinalPrice(decayedSellVolume, pool.initialSellPrice, newDecayedBuyVolume, newInitialBuyPrice);
         pool.finalSellPrice = pool.finalBuyPrice;
         pool.decayedBuyTime = (((block.timestamp - pool.lastBuyTimestamp) * amountToken) + (pool.decayedBuyTime * decayedBuyVolume)) / (amountToken + decayedBuyVolume);
@@ -307,7 +304,6 @@ contract Maelstrom {
         uint256 amountEther = (rETH * amountPoolToken) / ts;
         uint256 amountEtherAfterFees = (amountEther * 995) / 1000;
         ethBalance[token] -= amountEtherAfterFees;
-
         (bool success, ) = msg.sender.call{ value: amountEtherAfterFees }("");
         if (pt.balanceOf(msg.sender) == 0) {
             address[] storage currentPools = userPools[msg.sender];

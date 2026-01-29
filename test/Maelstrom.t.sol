@@ -151,11 +151,14 @@ contract MaelstromTest is Test {
         uint256 minTokensOut = (quotedTokens * 99) / 100;
         maelstrom.buy{ value: 1 ether }(address(tokenA), minTokensOut);
         tokenA.approve(address(maelstrom), 1 * 10 ** 18);
+
         uint256 sellAmount = 1e17;
         tokenA.approve(address(maelstrom), sellAmount);
+
         uint256 price = maelstrom.priceSell(address(tokenA));
         uint256 quoted = (sellAmount * price) / 1e18;
         uint256 minOut = (quoted * 99) / 100;
+
         maelstrom.sell(address(tokenA), sellAmount, minOut);
         vm.stopPrank();
         uint256 priceAfterTrade = maelstrom.priceBuy(address(tokenA));
