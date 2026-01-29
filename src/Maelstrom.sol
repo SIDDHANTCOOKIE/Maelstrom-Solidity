@@ -109,7 +109,7 @@ contract Maelstrom {
         SafeERC20.safeTransferFrom(IERC20(token), from, address(this), amountToken);
     }
 
-    function ininSubArray(address[] memory array, uint256 start, uint256 end)
+    function _getSubArray(address[] memory array, uint256 start, uint256 end)
         internal
         pure
         returns (address[] memory)
