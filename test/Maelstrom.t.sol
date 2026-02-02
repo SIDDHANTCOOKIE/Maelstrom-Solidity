@@ -91,30 +91,30 @@ contract MaelstromTest is Test {
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{ value: 10 ether }(address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE);
         vm.stopPrank();
-        
+
         // Bob buys tokens
         uint256 ethAmount = 1 ether;
         uint256 currentBuyPrice = maelstrom.priceBuy(address(tokenA));
         uint256 expectedTokenAmount = (ethAmount * 1e18) / currentBuyPrice;
-        
+
         vm.startPrank(bob);
         uint256 bobTokensBefore = tokenA.balanceOf(bob);
-        
+
         vm.expectEmit(true, true, true, false);
         emit BuyTrade(address(tokenA), address(bob), ethAmount, expectedTokenAmount, currentBuyPrice, 0, 0);
         maelstrom.buy{ value: ethAmount }(address(tokenA), expectedTokenAmount);
-        
+
         // Verify results
         uint256 bobTokensAfter = tokenA.balanceOf(bob);
         uint256 updatedBuyPrice = maelstrom.priceBuy(address(tokenA));
         uint256 updatedSellPrice = maelstrom.priceSell(address(tokenA));
-        
+
         console.log("Bob's tokens after:", bobTokensAfter);
         console.log("Actual tokens received:", bobTokensAfter - bobTokensBefore);
-        
+
         assertEq(bobTokensAfter - bobTokensBefore, expectedTokenAmount);
         vm.stopPrank();
-        
+
         // Check pool balances updated
         (uint256 ethBalance, uint256 tokenBalance) = maelstrom.reserves(address(tokenA));
         assertEq(ethBalance, 10 ether + ethAmount);
@@ -127,27 +127,27 @@ contract MaelstromTest is Test {
         tokenA.approve(address(maelstrom), INITIAL_TOKEN_AMOUNT);
         maelstrom.initializePool{ value: 20 ether }(address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE);
         vm.stopPrank();
-        
+
         // Bob sells tokens
         uint256 tokenAmount = 1 * 10 ** 18;
         uint256 currentSellPrice = maelstrom.priceSell(address(tokenA));
         uint256 expectedEthAmount = (tokenAmount * currentSellPrice) / 1e18;
-        uint256 minEthOut = (expectedEthAmount * 99) / 100; 
-        
+        uint256 minEthOut = (expectedEthAmount * 99) / 100;
+
         vm.startPrank(bob);
         tokenA.approve(address(maelstrom), tokenAmount);
         uint256 bobEthBefore = bob.balance;
-        
+
         // Only check the first 3 indexed parameters and the known values
-        vm.expectEmit(true, true, true, false);  // Changed last parameter to false
+        vm.expectEmit(true, true, true, false); // Changed last parameter to false
         emit SellTrade(address(tokenA), address(bob), tokenAmount, expectedEthAmount, currentSellPrice, 0, 0);
-        
+
         maelstrom.sell(address(tokenA), tokenAmount, minEthOut);
-        
+
         uint256 bobEthAfter = bob.balance;
         assertEq(bobEthAfter - bobEthBefore, expectedEthAmount);
         vm.stopPrank();
-        
+
         // Check pool balances updated
         (uint256 ethBalance, uint256 tokenBalance) = maelstrom.reserves(address(tokenA));
         assertEq(ethBalance, 20 ether - expectedEthAmount);
@@ -263,28 +263,28 @@ contract MaelstromTest is Test {
         maelstrom.initializePool{ value: 100 ether }(address(tokenA), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE);
         maelstrom.initializePool{ value: 100 ether }(address(tokenB), INITIAL_TOKEN_AMOUNT, INITIAL_BUY_PRICE, INITIAL_SELL_PRICE);
         vm.stopPrank();
-        
+
         // Bob swaps tokenA for tokenB
         uint256 tokenAAmount = 1 * 10 ** 17;
-        
+
         // Get current prices before the swap
         uint256 currentSellPriceA = maelstrom.priceSell(address(tokenA));
         uint256 currentBuyPriceB = maelstrom.priceBuy(address(tokenB));
-        
+
         // Calculate expected amounts using actual prices
         uint256 expectedEthFromSell = (tokenAAmount * currentSellPriceA) / 1e18;
         uint256 expectedTokenBAmount = (expectedEthFromSell * 1e18) / currentBuyPriceB;
-        
+
         vm.startPrank(bob);
         tokenA.approve(address(maelstrom), tokenAAmount);
         uint256 bobTokenBBefore = tokenB.balanceOf(bob);
-        
+
         // Only check indexed parameters (first 3 true, last false)
         vm.expectEmit(true, true, true, false);
         emit SwapTrade(address(tokenA), address(tokenB), bob, tokenAAmount, expectedTokenBAmount, currentSellPriceA, 0, currentBuyPriceB, 0);
-        
+
         maelstrom.swap(address(tokenA), address(tokenB), tokenAAmount, expectedTokenBAmount);
-        
+
         uint256 bobTokenBAfter = tokenB.balanceOf(bob);
         assertEq(bobTokenBAfter - bobTokenBBefore, expectedTokenBAmount);
         vm.stopPrank();
