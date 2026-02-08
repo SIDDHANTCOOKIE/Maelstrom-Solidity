@@ -265,7 +265,7 @@ contract Maelstrom {
     function sell(address token, uint256 amount, uint256 minimumAmountEther) public validAmount(amount) validAddress(token) {
         receiveERC20(token, msg.sender, amount);
         (uint256 amountEther, uint256 sellPrice) = _postSell(token, amount);
-        require(minimumAmountEther < amountEther, "Insufficient output amount");
+        require(amountEther >= minimumAmountEther, "Insufficient output amount");
         (bool success, ) = msg.sender.call{ value: amountEther }("");
         require(success, "Transfer failed");
         emit SellTrade(token, msg.sender, amount, amountEther, sellPrice, priceSell(token), priceBuy(token));
